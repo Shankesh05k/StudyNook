@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_parts.html" import icon, brandmark, avatar %}
+{% block title %}Sign in - StudyNook{% endblock %}
+{% block shell %}
+<div class="login">
+  <section class="login-art">
+    <div class="brand">{{ brandmark(34) }} StudyNook</div>
+    <h1>A study spot, held for you.</h1>
+    <p class="lead">Book a room for the hour you need it, check in when you arrive, and see what others thought of it.</p>
+    <div class="login-facts">
+      <div>{{ icon('door', 22) }} <span><b>{{ facts.spaces|int }}</b> spaces open</span></div>
+      <div>{{ icon('users', 22) }} <span><b>{{ facts.members|int }}</b> members</span></div>
+      <div>{{ icon('calendar', 22) }} <span><b>{{ facts.bookings|int }}</b> bookings made</span></div>
+    </div>
+    {% include "_floorplan.html" %}
+  </section>
+
+  <section class="login-form">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<p class="flash {{ category }}" role="status">{{ message }}</p>{% endfor %}
+    {% endwith %}
+    <h2>Sign in</h2>
+    <p class="muted">Use your campus email to see your bookings.</p>
+    <form method="post">
+      <div class="form-row">
+        <label for="email">Campus email</label>
+        <input id="email" type="email" name="email" placeholder="name@vit.ac.in" autocomplete="email" required>
+      </div>
+      <button type="submit">Sign in</button>
+    </form>
+
+    <div class="divider">or try a demo account</div>
+    <div class="demo-list">
+      {% for m in members %}
+      <form method="post">
+        <input type="hidden" name="member_id" value="{{ m.member_id|int }}">
+        <button class="demo" type="submit">
+          {{ avatar(m.name, True) }}
+          <span><b>{{ m.name }}</b><small>{{ m.member_type }}, {{ m.department }}</small></span>
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+    <p class="muted" style="margin-top:1.5rem;font-size:.92rem">Demo sign-in for the lab project. <a href="{{ url_for('admin_login') }}">Administrator sign-in</a></p>
+  </section>
+</div>
+{% endblock %}

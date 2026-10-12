@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_parts.html" import icon, stars, avatar, typeclass %}
+{% block title %}Spaces and reviews - StudyNook{% endblock %}
+{% block content %}
+<h1>Spaces and reviews</h1>
+<p>Every space on campus, with what members who used it thought.</p>
+<div class="cards">
+  {% for s in rows %}
+  <article class="space {{ typeclass(s.space_type)|trim }}">
+    <div class="band"></div>
+    <div class="body">
+      <span class="type-tag">{{ s.space_type }}</span>
+      <h3>{{ s.space_name }}</h3>
+      <div class="facts">
+        <span>{{ icon('pin', 15) }} {{ s.location }}</span>
+        <span>{{ icon('users', 15) }} Seats {{ s.capacity|int }}</span>
+      </div>
+      <div class="foot">
+        {% if s.avg_rating is none %}
+          <span class="muted">No reviews yet</span>
+        {% else %}
+          <span>{{ stars(s.avg_rating) }} <strong>{{ '%.1f'|format(s.avg_rating) }}</strong> <span class="muted">({{ s.reviews|int }})</span></span>
+        {% endif %}
+        <span class="chip {{ s.status }}">{{ s.status }}</span>
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+<h2>{{ icon('chat', 22) }} Latest comments</h2>
+{% if latest %}
+<div class="quotes">
+  {% for f in latest %}
+  <div class="quote">
+    {{ avatar(f.name, True) }}
+    <div>
+      <p>{{ f.comments }}</p>
+      <span class="muted">{{ f.name }} on {{ f.space_name }}, {{ f.rating|int }} out of 5, {{ f.date_label }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+  <p class="empty">No comments yet.</p>
+{% endif %}
+{% endblock %}

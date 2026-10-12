@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_parts.html" import icon, dtile %}
+{% block title %}My bookings - StudyNook{% endblock %}
+{% block content %}
+<h1>My bookings</h1>
+<p>Check in when you arrive. A booking you never check in to becomes a no-show and can earn a penalty.</p>
+{% if not rows %}
+  <p class="empty">You have not booked anything yet. <a href="{{ url_for('book') }}">Book a space.</a></p>
+{% else %}
+<div class="rows">
+  {% for r in rows %}
+  <article class="row-item">
+    {{ dtile(r.day_num, r.mon, r.dow, r.booking_status) }}
+    <div class="main">
+      <h3>{{ r.space_name }} <span class="chip {{ r.booking_status }}" style="margin-left:.4rem">{{ r.booking_status }}</span></h3>
+      <div class="sub">
+        <span>{{ icon('clock', 15) }} {{ r.start_time }} to {{ r.end_time }}</span>
+        <span>{{ icon('pin', 15) }} {{ r.location }}</span>
+        <span>Booking {{ r.booking_id|int }}</span>
+      </div>
+      {% if r.in_time %}<div class="sub" style="margin-top:.2rem"><span>{{ icon('check', 15) }} In {{ r.in_time }}{% if r.out_time %}, out {{ r.out_time }}{% endif %}</span></div>{% endif %}
+    </div>
+    <div class="side actions">
+      {% if r.booking_status == 'Confirmed' %}
+        {% if r.checkin_id and not r.checkout_time %}
+          <form method="post" action="{{ url_for('checkout') }}">
+            <input type="hidden" name="booking_id" value="{{ r.booking_id|int }}">
+            <button type="submit">{{ icon('check', 16) }} Check out</button>
+          </form>
+        {% else %}
+          <div>
+            <form method="post" action="{{ url_for('checkin') }}">
+              <input type="hidden" name="booking_id" value="{{ r.booking_id|int }}">
+              <button type="submit">{{ icon('check', 16) }} Check in</button>
+            </form>
+            <form method="post" action="{{ url_for('cancel') }}">
+              <input type="hidden" name="booking_id" value="{{ r.booking_id|int }}">
+              <button class="danger" type="submit">Cancel booking</button>
+            </form>
+          </div>
+        {% endif %}
+      {% elif r.booking_status == 'Completed' %}
+        {% if r.rating %}
+          <span class="muted">Your rating: {{ r.rating|int }} out of 5</span>
+        {% else %}
+          <form class="rate-form" method="post" action="{{ url_for('feedback') }}">
+            <input type="hidden" name="booking_id" value="{{ r.booking_id|int }}">
+            <select id="rating-{{ r.booking_id|int }}" name="rating" required aria-label="Rating">
+              <option value="" disabled selected>Rating</option>
+              <option value="5">5 (excellent)</option><option value="4">4</option><option value="3">3</option>
+              <option value="2">2</option><option value="1">1 (poor)</option>
+            </select>
+            <input type="text" name="comments" maxlength="300" placeholder="Comment (optional)" aria-label="Comment">
+            <button class="quiet" type="submit">Save review</button>
+          </form>
+        {% endif %}
+      {% elif r.booking_status == 'No-Show' %}
+        <span class="muted">You did not check in, so a penalty can apply.</span>
+      {% else %}
+        <span class="muted">Cancelled, nothing more to do.</span>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

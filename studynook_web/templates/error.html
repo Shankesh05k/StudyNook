@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Database problem - StudyNook{% endblock %}
+{% block content %}
+<section class="panel wide">
+  <h1>The database did not respond</h1>
+  <p>StudyNook could not complete that request. Check that Oracle is running and that the settings in <code>config.py</code> are correct.</p>
+  <p class="flash error">{{ detail }}</p>
+  <p style="margin:0"><a href="{{ url_for('login') }}">Back to sign-in</a></p>
+</section>
+{% endblock %}

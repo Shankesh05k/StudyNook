@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from "_parts.html" import icon %}
+{% block title %}Reports - StudyNook{% endblock %}
+{% block content %}
+<h1>Reports</h1>
+<p>How the spaces are really used: bookings against actual attendance.</p>
+<div class="kpis">
+  <div class="kpi"><b>{{ totals.bookings|int }}</b><span>bookings in total</span></div>
+  <div class="kpi k2"><b>{{ totals.no_shows|int }}</b><span>no-shows</span></div>
+  <div class="kpi k3"><b>{{ totals.active_penalties|int }}</b><span>active penalties</span></div>
+  <div class="kpi k4"><b>{% if totals.avg_rating is none %}-{% else %}{{ '%.2f'|format(totals.avg_rating) }}{% endif %}</b><span>average rating out of 5</span></div>
+</div>
+
+<h2>{{ icon('chart', 22) }} Space utilization</h2>
+<p class="muted">Attendance is attended bookings divided by attended plus no-show bookings. Cancelled and upcoming bookings are left out.</p>
+<div class="table-wrap"><table class="list">
+  <thead><tr><th>Space</th><th>Status</th><th class="num">Bookings</th><th class="num">Attended</th><th class="num">No-shows</th><th>Attendance</th></tr></thead>
+  <tbody>
+  {% for u in utilization %}
+    <tr>
+      <td>{{ u.space_name }}</td><td><span class="chip {{ u.status }}">{{ u.status }}</span></td>
+      <td class="num">{{ u.total_bookings|int }}</td><td class="num">{{ u.attended|int }}</td><td class="num">{{ u.no_shows|int }}</td>
+      <td>
+        {% if u.attendance_pct is none %}<span class="muted">No finished bookings</span>
+        {% else %}
+        <div class="meter"><span class="track"><span class="fill {{ 'low' if u.attendance_pct < 50 else ('mid' if u.attendance_pct < 80 else '') }}" style="width:{{ u.attendance_pct }}%"></span></span><b>{{ '%g'|format(u.attendance_pct) }}%</b></div>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<h2>{{ icon('alert', 22) }} Members with no-shows</h2>
+<div class="table-wrap"><table class="list">
+  <thead><tr><th>Member</th><th>Type</th><th class="num">No-shows</th><th class="num">Penalties issued</th><th class="num">Active now</th></tr></thead>
+  <tbody>
+  {% for o in offenders %}
+    <tr>
+      <td>{{ o.name }}</td><td>{{ o.member_type }}</td>
+      <td class="num">{{ o.no_shows|int }}</td><td class="num">{{ o.penalties|int }}
+        {% if o.penalties|int < o.no_shows|int %}<span class="chip Maintenance" title="A no-show has no penalty yet">pending</span>{% endif %}</td>
+      <td class="num">{{ o.active_penalties|int }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<h2>{{ icon('clock', 22) }} Busiest time slots</h2>
+<div class="table-wrap"><table class="list">
+  <thead><tr><th>Slot</th><th>Active bookings</th></tr></thead>
+  <tbody>
+  {% for s in slots %}
+    <tr><td>{{ s.slot }}</td>
+      <td><div class="meter"><span class="track"><span class="fill" style="width:{{ (s.bookings|int / (slots[0].bookings|int or 1) * 100)|round|int }}%"></span></span><b>{{ s.bookings|int }}</b></div></td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+
+<h2>{{ icon('shield', 22) }} No-show sweep</h2>
+<p class="muted">Finds Confirmed bookings whose slot has ended without a check-in, marks them No-Show, makes sure every no-show has a penalty, and clears active penalties older than 14 days. Leave the time empty to use the real time, or enter a later time to see the effect.</p>
+<form method="post" action="{{ url_for('admin_sweep') }}" class="rate-form" style="justify-content:flex-start">
+  <input type="datetime-local" name="as_of" aria-label="Judge slots as of this date and time">
+  <button type="submit">{{ icon('check', 16) }} Run no-show sweep</button>
+</form>
+
+<h2>{{ icon('door', 22) }} Space status</h2>
+<p class="muted">Setting a space to Maintenance or Closed cancels its unused future bookings automatically.</p>
+<div class="table-wrap"><table class="list">
+  <thead><tr><th>Space</th><th>Location</th><th>Status</th><th>Change to</th></tr></thead>
+  <tbody>
+  {% for s in all_spaces %}
+    <tr>
+      <td>{{ s.space_name }}</td><td>{{ s.location }}</td><td><span class="chip {{ s.status }}">{{ s.status }}</span></td>
+      <td>
+        <form method="post" action="{{ url_for('admin_space_status') }}" class="rate-form" style="justify-content:flex-start">
+          <input type="hidden" name="space_id" value="{{ s.space_id|int }}">
+          <select name="status" aria-label="New status for {{ s.space_name }}">
+            {% for opt in ['Available', 'Maintenance', 'Closed'] %}<option value="{{ opt }}" {% if opt == s.status %}selected{% endif %}>{{ opt }}</option>{% endfor %}
+          </select>
+          <button class="quiet" type="submit">Save</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+
+<h2>{{ icon('list', 22) }} Booking status log</h2>
+{% if audit is none %}
+  <p class="empty">The log is not set up yet. Run 07_cursor_triggers.sql in Oracle to enable it.</p>
+{% elif audit %}
+<div class="table-wrap"><table class="list">
+  <thead><tr><th>When</th><th>Booking</th><th>From</th><th>To</th><th>By</th></tr></thead>
+  <tbody>
+  {% for a in audit %}
+    <tr><td>{{ a.when_label }}</td><td>{{ a.booking_id|int }}</td>
+      <td><span class="chip {{ a.old_status }}">{{ a.old_status }}</span></td>
+      <td><span class="chip {{ a.new_status }}">{{ a.new_status }}</span></td><td>{{ a.changed_by }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+  <p class="empty">No status changes recorded yet. Cancel, check out or sweep a booking and it appears here.</p>
+{% endif %}
+
+<h2>{{ icon('list', 22) }} Latest bookings</h2>
+<div class="table-wrap"><table class="list">
+  <thead><tr><th>No.</th><th>Member</th><th>Space</th><th>When</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for b in recent %}
+    <tr>
+      <td>{{ b.booking_id|int }}</td><td>{{ b.name }}</td><td>{{ b.space_name }}</td>
+      <td>{{ b.date_label }}, {{ b.start_time }} to {{ b.end_time }}</td>
+      <td><span class="chip {{ b.booking_status }}">{{ b.booking_status }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

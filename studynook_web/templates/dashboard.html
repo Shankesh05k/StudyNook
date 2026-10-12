@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "_parts.html" import icon, dtile %}
+{% block title %}Overview - StudyNook{% endblock %}
+{% block hero %}
+<section class="hero">
+  {% include "_floorplan.html" %}
+  <div class="hero-inner">
+    <div>
+      <h1>Hello, {{ me|first_name }}</h1>
+      {% if upcoming %}
+        <p>You have {{ upcoming|length }} confirmed booking{{ '' if upcoming|length == 1 else 's' }}. Check in when you arrive and your attendance stays on record.</p>
+      {% else %}
+        <p>You have nothing booked right now. Pick a room and a time slot and it is yours.</p>
+      {% endif %}
+      <div class="cta">
+        <a class="button amber" href="{{ url_for('book') }}">{{ icon('calendar', 18) }} Book a space</a>
+        <a class="button ghost" href="{{ url_for('bookings') }}">{{ icon('list', 18) }} My bookings</a>
+      </div>
+    </div>
+    {% if upcoming %}
+    {% set n = upcoming[0] %}
+    <div class="ticket">
+      {{ dtile(n.day_num, n.mon, n.dow) }}
+      <div>
+        <p class="note">Your next booking</p>
+        <h3>{{ n.space_name }}</h3>
+        <div class="meta">
+          <span>{{ icon('clock', 16) }} {{ n.start_time }} to {{ n.end_time }}</span>
+          <span>{{ icon('pin', 16) }} {{ n.location }}</span>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="ticket">
+      <div>
+        <h3>No booking yet</h3>
+        <p class="note" style="margin:0">Rooms fill up quickly before exams, so book early.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+{% block content %}
+{% if stats.active_penalties >= 2 %}
+  <p class="flash warn">You have {{ stats.active_penalties|int }} active penalties, so new bookings are blocked until they expire (14 days after each one) or an administrator waives them.</p>
+{% endif %}
+
+<div class="tiles" style="margin-top:0">
+  <div class="tile">
+    {% set pct = stats.attendance or 0 %}
+    <svg class="ring" viewBox="0 0 80 80" role="img" aria-label="Attendance {{ '%g'|format(pct) }} percent">
+      <circle class="track" cx="40" cy="40" r="32"/>
+      <circle class="bar" cx="40" cy="40" r="32" stroke-dasharray="{{ pct * 2.0106 }} 201.06"/>
+      <text x="40" y="46" text-anchor="middle">{% if stats.attendance is none %}-{% else %}{{ '%g'|format(pct) }}%{% endif %}</text>
+    </svg>
+    <div><b>Attendance</b><span class="label">{% if stats.attendance is none %}No finished bookings yet{% else %}of your finished bookings were attended{% endif %}</span></div>
+  </div>
+  <div class="tile {{ 'alert' if stats.active_penalties >= 2 else 'calm' }}">
+    <div class="badge-ico">{{ icon('shield' if stats.active_penalties == 0 else 'alert', 26) }}</div>
+    <div><b>{{ stats.active_penalties|int }}</b><span class="label">active penalties (2 blocks booking)</span></div>
+  </div>
+  <div class="tile calm">
+    <div class="badge-ico">{{ icon('calendar', 26) }}</div>
+    <div><b>{{ upcoming|length }}</b><span class="label">confirmed bookings coming up</span></div>
+  </div>
+</div>
+
+<h2>{{ icon('calendar', 22) }} Coming up</h2>
+{% if upcoming %}
+<div class="rows">
+  {% for b in upcoming %}
+  <div class="row-item">
+    {{ dtile(b.day_num, b.mon, b.dow) }}
+    <div class="main">
+      <h3>{{ b.space_name }}</h3>
+      <div class="sub"><span>{{ icon('clock', 15) }} {{ b.start_time }} to {{ b.end_time }}</span><span>{{ icon('pin', 15) }} {{ b.location }}</span></div>
+    </div>
+    <a class="button outline" href="{{ url_for('bookings') }}">Manage</a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+  <p class="empty">Nothing booked yet. <a href="{{ url_for('book') }}">Find a free slot.</a></p>
+{% endif %}
+
+<h2>{{ icon('alert', 22) }} Penalties</h2>
+{% if penalties %}
+<div class="table-wrap"><table class="list">
+  <thead><tr><th>Date</th><th>Space</th><th>Reason</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for p in penalties %}
+    <tr><td>{{ p.date_label }}</td><td>{{ p.space_name }}</td><td>{{ p.reason }}</td><td><span class="chip {{ p.status }}">{{ p.status }}</span></td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+  <p class="empty">No penalties. One is added when you book a slot and do not check in, and it clears by itself after 14 days.</p>
+{% endif %}
+{% endblock %}

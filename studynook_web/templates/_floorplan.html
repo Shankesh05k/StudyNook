@@ -1,0 +1,11 @@
+<svg class="floorplan" viewBox="0 0 440 300" aria-hidden="true" focusable="false">
+  <rect class="fp-wall" x="8" y="8" width="424" height="284" rx="16"/>
+  <path class="fp-door" d="M8 215a42 42 0 0 1 42 42"/>
+  {% for t in [(70, 48), (250, 48), (70, 176), (250, 176)] %}
+    <rect class="fp-table {{ 'fp-you' if loop.index == 4 }}" x="{{ t[0] }}" y="{{ t[1] }}" width="110" height="60" rx="10"/>
+    <circle class="fp-chair" cx="{{ t[0] + 28 }}" cy="{{ t[1] - 16 }}" r="9"/>
+    <circle class="fp-chair" cx="{{ t[0] + 82 }}" cy="{{ t[1] - 16 }}" r="9"/>
+    <circle class="fp-chair" cx="{{ t[0] + 28 }}" cy="{{ t[1] + 76 }}" r="9"/>
+    <circle class="fp-chair" cx="{{ t[0] + 82 }}" cy="{{ t[1] + 76 }}" r="9"/>
+  {% endfor %}
+</svg>

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_parts.html" import icon, typeclass %}
+{% block title %}Book a space - StudyNook{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Book a space</h1>
+    <p style="margin:0">Choose a day, then press Book on a free slot. The database refuses double bookings.</p>
+  </div>
+  {% if dates %}<div class="free-count">{{ icon('check', 18) }} {{ free_count }} free slot{{ '' if free_count == 1 else 's' }} on this day</div>{% endif %}
+</div>
+
+{% if not dates %}
+  <p class="empty">There are no upcoming time slots yet. An administrator needs to add some.</p>
+{% else %}
+  <nav class="tabs" aria-label="Day">
+    {% for value, dow, daymon in dates %}
+      <a href="{{ url_for('book', date=value) }}" {% if value == selected %}aria-current="true"{% endif %}><span>{{ dow }}</span><b>{{ daymon }}</b></a>
+    {% endfor %}
+  </nav>
+
+  <div class="board-wrap">
+  <table class="board">
+    <thead>
+      <tr>
+        <th scope="col">Room</th>
+        {% for s in slots %}<th scope="col" class="slot">{{ s.start_time }} to {{ s.end_time }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in grid %}
+      <tr class="{{ typeclass(row.space.space_type)|trim }}">
+        <td class="room">
+          <strong>{{ row.space.space_name }}</strong>
+          <span>{{ icon('users', 14) }} Seats {{ row.space.capacity|int }}, {{ row.space.space_type }}</span>
+          <span>{{ icon('pin', 14) }} {{ row.space.location }}</span>
+        </td>
+        {% for c in row.cells %}
+        <td>
+          {% if c.state == 'free' %}
+            <form method="post" action="{{ url_for('book_post') }}">
+              <input type="hidden" name="space_id" value="{{ row.space.space_id|int }}">
+              <input type="hidden" name="slot_id" value="{{ c.slot.slot_id|int }}">
+              <input type="hidden" name="date" value="{{ selected }}">
+              <button class="cell free" type="submit" aria-label="Book {{ row.space.space_name }} at {{ c.slot.start_time }}">Book</button>
+            </form>
+          {% elif c.state == 'mine' %}<span class="cell mine">Yours</span>
+          {% elif c.state == 'taken' %}<span class="cell taken">Taken</span>
+          {% elif c.state == 'closed' %}<span class="cell closed">Closed</span>
+          {% else %}<span class="cell past">Passed</span>
+          {% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="legend">
+    <span><i class="l-free"></i>Free</span>
+    <span><i class="l-taken"></i>Taken by someone else</span>
+    <span><i class="l-mine"></i>Your booking</span>
+    <span><i class="l-study"></i>Study room</span>
+    <span><i class="l-disc"></i>Discussion area</span>
+    <span><i class="l-proj"></i>Project space</span>
+  </div>
+{% endif %}
+{% endblock %}

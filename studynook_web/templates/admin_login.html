@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Administrator - StudyNook{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Administrator sign-in</h1>
+  <p class="muted">Reports on bookings, no-shows, penalties and space utilization.</p>
+  <form method="post">
+    <div class="form-row">
+      <label for="password">Password</label>
+      <input id="password" type="password" name="password" required autocomplete="current-password">
+    </div>
+    <button type="submit">Sign in</button>
+  </form>
+  <p class="muted" style="margin:1.25rem 0 0"><a href="{{ url_for('login') }}">Back to member sign-in</a></p>
+</section>
+{% endblock %}

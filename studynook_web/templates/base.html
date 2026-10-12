@@ -1,0 +1,60 @@
+{% from "_parts.html" import icon, brandmark, avatar %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}StudyNook{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% block shell %}
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="{{ url_for('dashboard') if is_member else url_for('login') }}">{{ brandmark(30) }} StudyNook</a>
+    <nav class="nav" aria-label="Main">
+      {% if is_member %}
+        <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}aria-current="page"{% endif %}>{{ icon('home', 18) }} Overview</a>
+        <a href="{{ url_for('book') }}" {% if request.endpoint in ('book', 'book_post') %}aria-current="page"{% endif %}>{{ icon('calendar', 18) }} Book a space</a>
+        <a href="{{ url_for('bookings') }}" {% if request.endpoint == 'bookings' %}aria-current="page"{% endif %}>{{ icon('list', 18) }} My bookings</a>
+        <a href="{{ url_for('spaces') }}" {% if request.endpoint == 'spaces' %}aria-current="page"{% endif %}>{{ icon('grid', 18) }} Spaces</a>
+      {% elif is_admin %}
+        <a href="{{ url_for('admin') }}" aria-current="page">{{ icon('chart', 18) }} Reports</a>
+      {% endif %}
+    </nav>
+    {% if is_member or is_admin %}
+    <div class="who">
+      {{ avatar(me if is_member else 'Admin') }}
+      <span>{{ me if is_member else 'Administrator' }}</span>
+      <form method="post" action="{{ url_for('logout') }}"><button type="submit">Sign out</button></form>
+    </div>
+    {% endif %}
+  </div>
+</header>
+{% block hero %}{% endblock %}
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <p class="flash {{ category }}" role="status">{{ message }}</p>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+  {% if is_member %}
+  <section class="clock" aria-label="Simulated time">
+    <strong>Simulated time</strong> for testing check-in and check-out.
+    Check-in only opens 15 minutes before a slot starts, and the sample bookings are on future dates.
+    Choose a time inside a slot to test check-in now. Leave it unset to use the real time.
+    <form method="post" action="{{ url_for('demo_clock') }}">
+      <input type="datetime-local" name="sim_time" value="{{ sim_time_value }}" aria-label="Simulated date and time">
+      <button class="quiet" type="submit" name="action" value="set">Apply simulated time</button>
+      {% if sim_time_value %}<button class="quiet" type="submit" name="action" value="clear">Use real time</button>{% endif %}
+    </form>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}
+</body>
+</html>
