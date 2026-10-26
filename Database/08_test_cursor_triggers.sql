@@ -76,7 +76,7 @@ DECLARE
   v_marked NUMBER;
   v_pen    NUMBER;
 BEGIN
-  sp_mark_no_shows(TO_DATE('2026-10-14 00:00', 'YYYY-MM-DD HH24:MI'), v_marked, v_pen);
+  sp_mark_no_shows((TRUNC(SYSDATE) + 3), v_marked, v_pen);
   DBMS_OUTPUT.PUT_LINE('CUR2: marked ' || v_marked || ' bookings as No-Show, issued ' || v_pen || ' penalties');
 END;
 /

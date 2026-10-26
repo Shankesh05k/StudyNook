@@ -1,4 +1,3 @@
--- StudyNook - quick sanity checks (run after 01_ddl.sql and 02_dml.sql)
 SET DEFINE OFF
 SET LINESIZE 150
 SET PAGESIZE 50

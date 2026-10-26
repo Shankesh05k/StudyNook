@@ -64,20 +64,20 @@ PROMPT Expect: ORA-20023 for too-early check-in, then OK x3, then ORA-20021 and 
 DECLARE
 BEGIN
   BEGIN
-    sp_check_in(24, TIMESTAMP '2026-10-12 07:00:00');
+    sp_check_in(24, (TRUNC(SYSDATE) + 1 + 7/24));
     DBMS_OUTPUT.PUT_LINE('T4a UNEXPECTED: early check-in allowed');
   EXCEPTION
     WHEN OTHERS THEN
       DBMS_OUTPUT.PUT_LINE('T4a rejected as expected: ' || SQLERRM);
   END;
-  sp_check_in(23, TIMESTAMP '2026-10-12 09:05:00');
+  sp_check_in(23, (TRUNC(SYSDATE) + 1 + 9/24 + 5/1440));
   DBMS_OUTPUT.PUT_LINE('T4b OK: booking 23 checked in');
-  sp_check_out(23, TIMESTAMP '2026-10-12 10:50:00');
+  sp_check_out(23, (TRUNC(SYSDATE) + 1 + 10/24 + 50/1440));
   DBMS_OUTPUT.PUT_LINE('T4c OK: booking 23 checked out (now Completed)');
   sp_submit_feedback(1, 23, 5, 'Test review from the procedure tests');
   DBMS_OUTPUT.PUT_LINE('T4d OK: feedback saved');
   BEGIN
-    sp_check_in(23, TIMESTAMP '2026-10-12 09:10:00');
+    sp_check_in(23, (TRUNC(SYSDATE) + 1 + 9/24 + 10/1440));
     DBMS_OUTPUT.PUT_LINE('T4e UNEXPECTED: checked in twice');
   EXCEPTION
     WHEN OTHERS THEN
@@ -118,7 +118,7 @@ DECLARE
 BEGIN
   sp_expire_penalties(NULL, v_n);
   DBMS_OUTPUT.PUT_LINE('T5a expired now: ' || v_n || ' (penalties are younger than 14 days)');
-  sp_expire_penalties(TO_DATE('2026-10-21 00:00', 'YYYY-MM-DD HH24:MI'), v_n);
+  sp_expire_penalties((TRUNC(SYSDATE) + 10), v_n);
   DBMS_OUTPUT.PUT_LINE('T5b expired as of 21 Oct: ' || v_n);
   DBMS_OUTPUT.PUT_LINE('T5c Karthik active penalties now: ' || fn_active_penalties(5));
   sp_book_space(5, 1, 14, v_id);

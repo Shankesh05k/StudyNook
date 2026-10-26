@@ -15,6 +15,6 @@ ORACLE_CLIENT_DIR = os.environ.get(
     r"C:\oraclexe\app\oracle\product\11.2.0\server\bin",
 )
 
-SECRET_KEY = "change-me-for-anything-beyond-a-lab-demo"
+SECRET_KEY = "ADMINSP"
 ADMIN_PASSWORD = os.environ.get("STUDYNOOK_ADMIN_PASSWORD", "admin123")
-python-dotenv @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/python-dotenv_1699475097728/work
+

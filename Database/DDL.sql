@@ -1,8 +1,3 @@
--- =====================================================================
--- StudyNook : Smart Campus Study Space Reservation & Utilization System
--- Review II - Step 1 : DDL & Constraints   (Oracle 10g / 11g / 12c+ compatible)
--- =====================================================================
-
 -- ---------- Clean re-run (child tables first) ----------
 BEGIN
   FOR t IN (SELECT table_name FROM user_tables
